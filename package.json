@@ -1,0 +1,25 @@
+{
+  "name": "cstv-cloudflare",
+  "version": "0.1.0",
+  "private": false,
+  "description": "GOTV+ (CSTV) broadcast relay on Cloudflare Workers + Durable Objects",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "types": "wrangler types",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241230.0",
+    "typescript": "^5.7.2",
+    "wrangler": "^3.99.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,4 @@
+# Copy to .dev.vars for local `wrangler dev` (never commit .dev.vars)
+#
+# Required locally (use `wrangler secret put ORIGIN_AUTH` for production)
+ORIGIN_AUTH=change-me-to-a-long-random-string
