@@ -1,0 +1,34 @@
+# Deploy this Worker to Cloudflare when you push to main (optional template).
+#
+# Required GitHub repository secrets:
+#   CLOUDFLARE_API_TOKEN   — API token with Workers Scripts Edit
+#   CLOUDFLARE_ACCOUNT_ID  — Workers dashboard account id
+#
+# Do not store tokens in this file.
+
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+        env:
+          # If you use secrets for ORIGIN_AUTH, set them in the Worker dashboard
+          # or extend this workflow with: wrangler secret put (interactive only locally).
