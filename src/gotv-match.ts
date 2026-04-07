@@ -1,5 +1,6 @@
 import type { SyncResponse } from "./types";
 import { tokenRedirectForSync } from "./auth";
+import { upsertMatchIndex, type MatchIndexRecord } from "./match-index";
 
 type FragmentData = {
   tick?: number;
@@ -130,6 +131,7 @@ export class GotvMatch implements DurableObject {
     this.keyframeInterval = keyframe_interval;
     this.protocol = protocol;
 
+    await this.touchMatchIndex();
     return new Response(null, { status: 200 });
   }
 
@@ -155,6 +157,7 @@ export class GotvMatch implements DurableObject {
     if (fragment > this.maxFullFragment) this.maxFullFragment = fragment;
     this.lastFullReceivedAtMs = now;
 
+    await this.touchMatchIndex();
     return new Response(null, { status: 200 });
   }
 
@@ -180,7 +183,25 @@ export class GotvMatch implements DurableObject {
     f.deltaAtMs = now;
     f.final = final;
 
+    await this.touchMatchIndex();
     return new Response(null, { status: 200 });
+  }
+
+  private async touchMatchIndex(): Promise<void> {
+    const token = this._ctx.id.name;
+    if (!token || !this.env.MATCH_INDEX) return;
+    if (!this.broadcastStarted() && !this.mapName) return;
+    const record: MatchIndexRecord = {
+      token,
+      map: this.mapName,
+      protocol: this.protocol,
+      tps: this.tps,
+      signupFragment: this.signupFragment >= 0 ? this.signupFragment : 0,
+      maxFullFragment: this.maxFullFragment,
+      updatedAt: Date.now(),
+      hasStart: this.broadcastStarted(),
+    };
+    await upsertMatchIndex(this.env, record);
   }
 
   private handleGetStart(fragment: number): Response {

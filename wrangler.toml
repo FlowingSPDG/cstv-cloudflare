@@ -3,8 +3,14 @@
 # Optional: set account_id in Dashboard → Workers → copy id (do not commit real IDs in forks)
 
 name = "cstv"
-main = "src/index.ts"
+main = "src/index.tsx"
 compatibility_date = "2024-12-01"
+
+# Dashboard stylesheet: public/assets/dashboard.css
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
 
 # Non-secret tunables (override in dashboard or wrangler.toml copy)
 [vars]
@@ -12,6 +18,14 @@ SYNC_FRAGMENT_DELAY = "8"
 SYNC_CACHE_MAX_AGE = "3"
 # SYNC_NOT_READY_USE_404 = "false"  # set "true" for gotv-plus-go style 404 instead of 405
 # TOKEN_REDIRECT = ""               # optional global playcast token_redirect segment (VDC)
+# DASHBOARD_KEY = ""                # optional: protect GET / and /api/matches (?key= or X-Dashboard-Key)
+
+# Dashboard / match list: optional KV writes match metadata (required to list matches)
+# npx wrangler kv namespace create CSTV_MATCH_INDEX
+# [[kv_namespaces]]
+# binding = "MATCH_INDEX"
+# id = "<production_id>"
+# preview_id = "<preview_id>"
 
 [[durable_objects.bindings]]
 name = "GOTV"

@@ -11,3 +11,5 @@ Include:
 - Affected versions or deployment shape (Workers / Durable Objects, etc.)
 
 **Operational note:** Restrict who can `POST` to your `/gotv/...` ingest URLs (firewall, Cloudflare Access, or IP allowlists in addition to `X-Origin-Auth`). Public viewers only need `GET`.
+
+**Dashboard:** `GET /` and `GET /api/matches` expose match **tokens** and playback URLs when KV indexing is enabled. Set **`DASHBOARD_KEY`** (var or secret) so only people with `?key=` or `X-Dashboard-Key` can open those routes.

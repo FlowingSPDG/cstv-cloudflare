@@ -45,10 +45,15 @@
 
    The token in the URL is whatever the game server sends (Valve documents formats like `s<steamid>t<cookie>`; your public alias can differ — see VDC).
 
+7. **Dashboard (optional):** open `https://<your-worker>.workers.dev/` for a small UI that lists active matches (when KV is configured) and copies `playcast` commands. See **Dashboard** below.
+
 ## HTTP surface
 
 | Method | Path | Notes |
 |--------|------|--------|
+| `GET` | `/` | HTML dashboard (**SSR** via Hono JSX: match rows from KV on each request). |
+| `GET` | `/assets/dashboard.css` | Dashboard styles ([`public/assets/dashboard.css`](public/assets/dashboard.css)), via `ASSETS` binding. Public (no `DASHBOARD_KEY`). |
+| `GET` | `/api/matches` | JSON: `{ origin, indexEnabled, matches[] }` — same data as the dashboard table. |
 | `POST` | `/gotv/:token/:fragment/start` | Header `X-Origin-Auth` required. Query: `tick`, `tps`, `map`, `keyframe_interval`, `protocol`. |
 | `POST` | `/gotv/:token/:fragment/full` | Query: `tick`. |
 | `POST` | `/gotv/:token/:fragment/delta` | Query: `endtick`, optional `final`. |
@@ -67,10 +72,23 @@ Set in `wrangler.toml` `[vars]` or in the dashboard:
 | `SYNC_CACHE_MAX_AGE` | `3` | `Cache-Control: max-age` for `/sync` (seconds). VDC suggests a few seconds; tune with your CDN. |
 | `SYNC_NOT_READY_USE_404` | unset | Set to `true` to return **404** when the chosen fragment is not ready (closer to gotv-plus-go); default is **405** (Valve relay style). |
 | `TOKEN_REDIRECT` | unset | Optional global `token_redirect` string in `/sync` JSON (VDC: path segment for generic → match-specific playcast URLs). |
+| `DASHBOARD_KEY` | unset | If set, `GET /` and `GET /api/matches` require `?key=<value>` or header `X-Dashboard-Key: <value>` (tokens in the list stay non-public). |
 
 **Secrets:** `ORIGIN_AUTH` — shared secret for ingest (`tv_broadcast_origin_auth`).
 
-No KV or D1 bindings are required; the worker runs with **Durable Objects + `ORIGIN_AUTH` + optional `[vars]`** only.
+**Core relay:** **Durable Objects + `ORIGIN_AUTH` + optional `[vars]`** — no database is required for GOTV+ itself.
+
+## Dashboard & match list
+
+`GET /` is **server-rendered**: the Worker reads the match index from KV and emits the table in HTML. **Styles** live in [`public/assets/dashboard.css`](public/assets/dashboard.css) and load with `<link rel="stylesheet">` (not inline CSS). **No client-side JavaScript** — users copy `playcast` / URL text from readonly fields manually.
+
+Active matches are stored inside Durable Objects; to **list** them you need a **Workers KV** binding so each ingest can update a small index entry.
+
+1. Create a namespace: `npx wrangler kv namespace create CSTV_MATCH_INDEX`
+2. Uncomment `[[kv_namespaces]]` for `MATCH_INDEX` in `wrangler.toml` and paste the IDs from the command output.
+3. Redeploy. After the game server sends `POST .../start` (and ongoing `full`/`delta`), rows appear on `/` and `/api/matches`.
+
+KV keys are `match:<token>` with JSON metadata (map, protocol, tps, last update, etc.) and a 7-day TTL refreshed on each write.
 
 ## Cloudflare caching (production)
 

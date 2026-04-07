@@ -2,3 +2,8 @@
 #
 # Required locally (use `wrangler secret put ORIGIN_AUTH` for production)
 ORIGIN_AUTH=change-me-to-a-long-random-string
+
+# Optional: same as wrangler [vars] / secret — lock down GET / and /api/matches
+# DASHBOARD_KEY=
+
+# MATCH_INDEX is a KV binding — configure in wrangler.toml (not a var file key)
